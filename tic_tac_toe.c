@@ -5,7 +5,7 @@ void printboard();
 int checkwin();
 void resetboard();
 
-char board[10];  // 1 to 9 will be used
+char board[10];  // 0 to 9 will be used
 
 int main() {
     char choice;
@@ -95,3 +95,4 @@ void resetboard() {
         board[i] = '0' + i;
     }
 }
+
