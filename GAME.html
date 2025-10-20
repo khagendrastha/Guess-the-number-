@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guess the Number Game</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #1e1e2f;
+            color: #fff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .container {
+            display: flex;
+            width: 85%;
+            max-width: 900px;
+            background: linear-gradient(135deg, #2c2c54, #3a3a67);
+            border-radius: 10px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            position: relative;
+        }
+        .game-container {
+            flex: 3;
+            padding: 20px;
+            text-align: center;
+            background-color: #35354d;
+            position: relative;
+        }
+        .game-container h1 {
+            color: #ffda79;
+        }
+        .game-container p {
+            color: #dcdde1;
+        }
+        input {
+            padding: 10px;
+            font-size: 16px;
+            width: 80%;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: none;
+            outline: none;
+        }
+        input:focus {
+            border: 2px solid #ffda79;
+        }
+        .message {
+            margin: 20px 0;
+            font-size: 18px;
+            font-weight: bold;
+            color: #ff4757;
+        }
+        .guesses-container {
+            flex: 1;
+            background-color: #222232;
+            padding: 15px;
+            border-left: 2px solid #3c3c56;
+            overflow-y: auto;
+        }
+        .guesses-container h3 {
+            color: #70a1ff;
+            text-align: center;
+        }
+        .guesses {
+            font-size: 14px;
+            margin-top: 10px;
+            color: #f1f2f6;
+        }
+        .guess-number {
+            padding: 8px;
+            margin: 5px 0;
+            background: #2f3542;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .play-again {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #70a1ff;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+            display: none;
+        }
+        .play-again:hover {
+            background-color: #1e90ff;
+        }
+        #fireworks {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <canvas id="fireworks"></canvas>
+        <div class="game-container">
+            <h1>Guess the Number</h1>
+            <p>I'm thinking of a number between 1 and 100. Try to guess it!</p>
+            <input type="number" id="guessInput" placeholder="Enter your guess">
+            <div class="message" id="message"></div>
+            <p id="tries">Number of tries: 0</p>
+            <button class="play-again" id="playAgain">Play Again</button>
+        </div>
+        <div class="guesses-container">
+            <h3>Your Guesses</h3>
+            <div class="guesses" id="guesses"></div>
+            <h3>Best Record</h3>
+            <div class="guesses" id="records"></div>
+        </div>
+    </div>
+
+    <script>
+        let randomNumber = Math.floor(Math.random() * 100) + 1;
+        let tries = 0;
+        let bestRecord = Infinity;
+
+        const inputField = document.getElementById('guessInput');
+        const message = document.getElementById('message');
+        const triesDisplay = document.getElementById('tries');
+        const guessesDisplay = document.getElementById('guesses');
+        const recordsDisplay = document.getElementById('records');
+        const playAgainButton = document.getElementById('playAgain');
+        const fireworksCanvas = document.getElementById('fireworks');
+        const ctx = fireworksCanvas.getContext('2d');
+
+        fireworksCanvas.width = window.innerWidth;
+        fireworksCanvas.height = window.innerHeight;
+
+        inputField.addEventListener('keydown', (event) => {
+            if (event.key === "Enter") {
+                const userGuess = parseInt(inputField.value);
+                inputField.value = ""; // Clear input field
+
+                if (isNaN(userGuess)) {
+                    message.textContent = "Please enter a valid number!";
+                    return;
+                }
+
+                tries++;
+                const guessElement = document.createElement('div');
+                guessElement.textContent = `Guess ${tries}: ${userGuess}`;
+                guessElement.classList.add('guess-number');
+                guessesDisplay.appendChild(guessElement);
+
+                if (userGuess < randomNumber) {
+                    message.textContent = "Higher number, please!";
+                } else if (userGuess > randomNumber) {
+                    message.textContent = "Lower number, please!";
+                } else {
+                    message.textContent = `Congrats! You guessed the number! It was ${randomNumber}.`;
+                    message.style.color = "#2ed573";
+                    triesDisplay.textContent = `You guessed the number in ${tries} tries!`;
+                    inputField.disabled = true;
+                    if (tries < bestRecord) {
+                        bestRecord = tries;
+                        updateBestRecord();
+                    }
+                    launchFireworks();
+                    playAgainButton.style.display = "block";
+                }
+
+                triesDisplay.textContent = `Number of tries: ${tries}`;
+            }
+        });
+
+        playAgainButton.addEventListener('click', () => {
+            resetGame();
+        });
+
+        function updateBestRecord() {
+            recordsDisplay.innerHTML = `Best Record: ${bestRecord} tries`;
+        }
+
+        function resetGame() {
+            randomNumber = Math.floor(Math.random() * 100) + 1;
+            tries = 0;
+            inputField.disabled = false;
+            inputField.value = "";
+            message.textContent = "";
+            message.style.color = "#ff4757";
+            triesDisplay.textContent = "Number of tries: 0";
+            guessesDisplay.innerHTML = "";
+            playAgainButton.style.display = "none";
+        }
+
+        function launchFireworks() {
+            let particles = [];
+
+            function createParticle(x, y, color) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 5 + 2;
+                const vx = Math.cos(angle) * speed;
+                const vy = Math.sin(angle) * speed;
+
+                particles.push({ x, y, vx, vy, color, life: 100 });
+            }
+
+            function animateParticles() {
+                ctx.clearRect(0, 0, fireworksCanvas.width, fireworksCanvas.height);
+
+                particles.forEach((p, i) => {
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+                    ctx.fillStyle = p.color;
+                    ctx.fill();
+
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.life--;
+
+                    if (p.life <= 0) particles.splice(i, 1);
+                });
+
+                if (particles.length > 0) {
+                    requestAnimationFrame(animateParticles);
+                }
+            }
+
+            for (let i = 0; i < 50; i++) {
+                createParticle(
+                    Math.random() * fireworksCanvas.width,
+                    Math.random() * fireworksCanvas.height,
+                    `hsl(${Math.random() * 360}, 100%, 50%)`
+                );
+            }
+
+            animateParticles();
+        }
+    </script>
+</body>
+</html>
